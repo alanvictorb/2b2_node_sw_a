@@ -1,5 +1,6 @@
 const inquirer = require('inquirer')
-const accountModule = require('./modules/moduleAccounts')
+const create = require('./modules/create')
+const manager = require('./modules/manager')
 const chalk = require('chalk')
 
 const fs = require('fs')
@@ -22,9 +23,9 @@ function operation() {
         const action = answer['action']
 
         if (action === 'Criar conta') {
-            accountModule.createAccount()
+            create.createAccount()
         } else if (action === 'Depositar') {
-            deposit()
+            manager.deposit()
         } else if (action === 'Consultar saldo') {
             getAccountBalance()
         } else if (action === 'Sacar') {
@@ -37,68 +38,7 @@ function operation() {
         }
     })
 }
-function deposit() {
-    inquirer.prompt([
-        {
-            name: 'accountName',
-            message: 'Informe o nome da conta a depositar: '
-        }
-    ]).then((answer) => {
-        const accountName = answer['accountName']
-        if (!checkAccount(accountName)) {
-            setTimeout(function () {
-                console.log(chalk.bgRed.black("Esta conta não existe!"))
-                return deposit()
-            }, 3000)
-        } else {
-            inquirer.prompt([
-                {
-                    name: 'amount',
-                    message: 'Quanto voce desja depositar?'
-                }
-            ]).then((answer) => {
-                const amount = answer['amount']
-                addAmount(accountName, amount)
-                operation()
-            })
-        }
-    })
-}
-function addAmount(accountName, amount) {
-    const accountData = getAccount(accountName)
 
-    if (!amount) {
-        console.log(chalk.bgRed.black('Ocorreu um erro! tente novamente mais tarde.'))
-        return deposit
-    }
-
-    accountData.balance = parseFloat(amount) + parseFloat(accountData.balance)
-
-    fs.writeFileSync(
-        `accounts/${accountName}.json`,
-        JSON.stringify(accountData),
-        function (err) {
-            console.log(err)
-        },
-    )
-    setTimeout(function () {
-        console.log(chalk.green('Valor depositado!'))
-    }, 2000)
-}
-function getAccount(accountName) {
-    const accountJson = fs.readFileSync(`accounts/${accountName}.json`, {
-        encoding: 'utf-8',
-        flag: 'r',
-    })
-
-    return JSON.parse(accountJson)
-}
-function checkAccount(accountName) {
-    if (!fs.existsSync(`accounts/${accountName}.json`)) {
-        return false
-    }
-    return true
-}
 function getAccountBalance() {
     inquirer
         .prompt([
@@ -149,7 +89,6 @@ function withdraw() {
             removeAmount(accountName, amount)
         })
 }
-
 function removeAmount(accountName, amount) {
     const accountData = getAccount(accountName)
 
